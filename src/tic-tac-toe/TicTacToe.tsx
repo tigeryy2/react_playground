@@ -69,6 +69,20 @@ const calculateDraw = (squares: (string | null)[]): boolean => {
     return !squares.includes(null);
 };
 
+const calculateMoveIndex = (
+    prevSquares: (string | null)[],
+    newSquares: (string | null)[],
+): number => {
+    // find the index of the square that changed
+    for (let i = 0; i < prevSquares.length; i++) {
+        if (prevSquares[i] !== newSquares[i]) {
+            return i;
+        }
+    }
+    // if no squares changed, return -1
+    return -1;
+};
+
 const Board: React.FC<{
     p1IsNext: boolean;
     squares: (string | null)[];
@@ -144,11 +158,24 @@ export default function TicTacToeGame() {
 
     const moves = moveHistory.map((currentSquares, move) => {
         let description: string;
-        if (move === currMove) {
+        if (move === 0) {
+            // no moves have been made yet
+            description = "Start Over";
+        } else if (move === currMove) {
+            // current move
             description = "Current Move #" + move;
         } else {
-            description = move ? "Go to move #" + move : "Start Over";
+            // for previous moves, calculate the move made
+            const moveIndex = calculateMoveIndex(
+                moveHistory[move - 1],
+                currentSquares,
+            );
+            const movePlayer = move % 2 === 0 ? "O" : "X";
+            description = `Go to move #${move} : ${movePlayer} at (${Math.floor(
+                moveIndex / 3,
+            )}, ${moveIndex % 3})`;
         }
+
         return (
             // Need to provide react with a unique key for each item in the list
             <li key={move}>
