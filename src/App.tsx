@@ -25,18 +25,32 @@ function App() {
     );
 }
 
-const Square: React.FC<{ value: string | null; onClick: () => void }> = ({
-    value,
-    onClick,
-}) => {
+const Square: React.FC<{
+    /** The value of the square, either 'X', 'O', or null */
+    value: string | null;
+    /** The function to call when the square is clicked */
+    onClick: () => void;
+    /**
+     * Whether this square is part of the winning line.
+     * If true, color is modified to highlight the winning line
+     * */
+    winning: boolean;
+}> = ({ value, onClick, winning }) => {
     return (
-        <button className="square" onClick={onClick}>
+        <button
+            className="square"
+            onClick={onClick}
+            style={{ color: winning ? "gold" : "black" }}
+        >
             {value}
         </button>
     );
 };
 
-const calculateWinner = (squares: (string | null)[]): string | null => {
+const calculateWinningSquares = (
+    squares: (string | null)[],
+): number[] | null => {
+    // caculate winning squares and return them as array
     const lines = [
         // horizontal
         [0, 1, 2],
@@ -58,10 +72,24 @@ const calculateWinner = (squares: (string | null)[]): string | null => {
             squares[a] === squares[b] &&
             squares[a] === squares[c]
         ) {
-            return squares[a];
+            return lines[i];
         }
     }
     return null;
+};
+
+const calculateWinner = (squares: (string | null)[]): string | null => {
+    const winningSquares = calculateWinningSquares(squares);
+    if (winningSquares) {
+        // if we have winning squares, we can find the winner from the value
+        // of the first square (or any square)
+        return squares[winningSquares[0]];
+    }
+    return null;
+};
+
+const calculateDraw = (squares: (string | null)[]): boolean => {
+    return !squares.includes(null);
 };
 
 const Board: React.FC<{
@@ -69,6 +97,8 @@ const Board: React.FC<{
     squares: (string | null)[];
     onPlay: (nextSquares: (string | null)[]) => void;
 }> = ({ p1IsNext, squares, onPlay }) => {
+    const winningSquares: number[] | null = calculateWinningSquares(squares);
+
     const handleClick = (index: number) => {
         // if we've already filled this square or the game is run, do nothing
         if (calculateWinner(squares) || squares[index]) return;
@@ -87,6 +117,7 @@ const Board: React.FC<{
                         key={index}
                         value={squares[index]}
                         onClick={() => handleClick(index)}
+                        winning={winningSquares?.includes(index) ?? false}
                     />
                 ))}
             </div>
@@ -96,6 +127,7 @@ const Board: React.FC<{
                         key={index + 3}
                         value={squares[index + 3]}
                         onClick={() => handleClick(index + 3)}
+                        winning={winningSquares?.includes(index + 3) ?? false}
                     />
                 ))}
             </div>
@@ -105,6 +137,7 @@ const Board: React.FC<{
                         key={index + 6}
                         value={squares[index + 6]}
                         onClick={() => handleClick(index + 6)}
+                        winning={winningSquares?.includes(index + 6) ?? false}
                     />
                 ))}
             </div>
@@ -128,6 +161,9 @@ export default function Game() {
     const currentSquares = moveHistory[currMove];
     // calculates winner and status at each render
     const winner: string | null = calculateWinner(currentSquares);
+    // Check for draw
+    const draw: boolean = calculateDraw(currentSquares);
+
     const moves = moveHistory.map((currentSquares, move) => {
         let description: string;
         if (move === currMove) {
@@ -144,7 +180,9 @@ export default function Game() {
     });
 
     let status: string;
-    if (winner) {
+    if (draw) {
+        status = "Draw! Everyone loses, that's not very American...";
+    } else if (winner) {
         status = "Winner: " + winner;
     } else {
         status = "Next player: " + (p1IsNext ? "X" : "O");
@@ -178,7 +216,7 @@ export default function Game() {
             </div>
             <div className="game-info">
                 <div className="status">{status}</div>
-                <ol>{moves}</ol>
+                <ul className={"no-bullets"}>{moves}</ul>
             </div>
         </div>
     );
