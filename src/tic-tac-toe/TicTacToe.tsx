@@ -131,6 +131,7 @@ export default function TicTacToeGame() {
     ]);
     // keep track of current move
     const [currMove, setCurrMove] = useState<number>(0);
+    const [movesOrderReversed, setMovesOrderReversed] = useState<boolean>(true);
 
     // derived state
     const p1IsNext: boolean = currMove % 2 === 0;
@@ -155,6 +156,8 @@ export default function TicTacToeGame() {
             </li>
         );
     });
+
+    const movesOrdered = movesOrderReversed ? moves.reverse() : moves;
 
     let status: string;
     if (draw) {
@@ -193,7 +196,12 @@ export default function TicTacToeGame() {
             </div>
             <div className="game-info">
                 <div className="status">{status}</div>
-                <ul className={"no-bullets"}>{moves}</ul>
+                <button
+                    onClick={() => setMovesOrderReversed(!movesOrderReversed)}
+                >
+                    Reverse Moves{" "}
+                </button>
+                <ul className={"no-bullets"}>{movesOrdered}</ul>
             </div>
         </div>
     );
